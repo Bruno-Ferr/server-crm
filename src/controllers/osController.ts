@@ -10,28 +10,35 @@ type serviceType = {
 
 const createOS = async (req: Request, res: Response) => { 
   const {services, client, vehicle, arrived} = req.body;
-  const { scheduleId } = req.params //Precisa pregar os agendamentos de user... ou user e veiculo
+  const { scheduleId } = req.params //Precisa pegar os agendamentos de user... ou user e veiculo
 
   const id = uuid()
 
   const startOfDay = dayjs(arrived).startOf('day').toJSON()
   const endOfDay = dayjs(arrived).endOf('day').toJSON()
 
-  const existingVehicleOS = await db('ordem_servico') //Verificar apenas no dia específico, não está 100% acredito
-      .select()
-      .where('veiculo', vehicle)
-      .whereBetween('chegada', [startOfDay, endOfDay])
+  // const existingVehicleOS = await db('ordem_servico') //Verificar apenas no dia específico, não está 100% acredito
+  //     .select()
+  //     .where('veiculo', vehicle)
+  //     .whereBetween('chegada', [startOfDay, endOfDay])
       
-  const existingServiceOrder = await db('servicos_os')
-    .whereIn('ordem_servico', existingVehicleOS.map((vehicleOS) => vehicleOS.id))
-    .whereIn('servico', services.map((service: serviceType) => service.service));
+  // const existingServiceOrder = await db('servicos_os')
+  //   .whereIn('ordem_servico', existingVehicleOS.map((vehicleOS) => vehicleOS.id))
+  //   .whereIn('servico', services.map((service: serviceType) => service.service));
 
-  if (existingServiceOrder.length > 0) {
-    const existingServiceOrderChecklist = await db('checklist')
-      .whereIn('os_id', existingServiceOrder.map((serviceOrder) => serviceOrder.ordem_servico))
-    return res.status(400).json({ error: 'Duplicate OS found in the database.', OS: [existingVehicleOS, existingServiceOrder, existingServiceOrderChecklist] });
-  }
+  // if (existingServiceOrder.length > 0) {
+  //   const existingServiceOrderChecklist = await db('checklist')
+  //     .whereIn('os_id', existingServiceOrder.map((serviceOrder) => serviceOrder.ordem_servico))
+  //   return res.status(400).json({ error: 'Duplicate OS found in the database.', OS: [existingVehicleOS, existingServiceOrder, existingServiceOrderChecklist] });
+  // }
   
+  const existingOS = await db('ordem_servico')
+    .where('agendamento', scheduleId)
+
+  if(existingOS.length > 0) {
+    return res.status(400).json({ error: 'OS for this schedule already exists.'});
+  }
+
   await db('ordem_servico').insert({id, cliente: client, veiculo: vehicle, chegada: new Date(arrived), agendamento: scheduleId})
 
   const services_os = services.map((service: serviceType) => ({  
@@ -83,7 +90,7 @@ type checklistPropsType = {
 
 const createChecklist = async (req: Request, res: Response) => {
   const {osId, checklistProps} = req.body;
-  console.log('oi')
+
   // 1 descrição por checklist ou descrição para cada foto do checklist?
   try {
     const checklistPhotos = checklistProps.map((checklistProp: checklistPropsType) => ({  

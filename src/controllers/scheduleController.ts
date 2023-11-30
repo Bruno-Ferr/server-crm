@@ -26,8 +26,11 @@ const getAvailableSchedule = async (req: Request, res: Response) => { //Corrigir
     const endHour = closeAt / 60 // Precisa trocar a conta para o tempo de duração medio do serviço, no caso se o tempo for 1 hora está correto
 
     const possibleTimes = Array.from({ length: (endHour - startHour) * (hora / services.duracao)}).map(
-      (_, i) => {
-        return startHour + ((i / (hora / services.duracao)))
+      (_, i) => {   
+        let hourPercent = (i / (hora / services.duracao))
+        let hour = Math.floor(hourPercent)
+        let minutes = (hourPercent % 1) * 60 / 100 
+        return startHour + hour + minutes
       },
     ) // Cria um array com todas as horas disponíveis
 
@@ -36,11 +39,12 @@ const getAvailableSchedule = async (req: Request, res: Response) => { //Corrigir
       .where('servico', service)
       .and
       .whereBetween('data', [referenceDate.set('hour', startHour).toDate(), referenceDate.set('hour', endHour).toDate()])
-
+    
     // scheduled.length > workDays[0].quantidade_por_vez preciso consultar se um tempo específico se repete igual a workDays[0].quantidade_por_vez vezes...
     const availableTimes = possibleTimes.filter((time) => {
       const isTimeBlocked = scheduled.some(
-        (scheduled) => scheduled.date.getHours() === time
+        (scheduled) => console.log()
+        //parseInt(scheduled.data.getHours() + "." + scheduled.data.getMinutes()) === time
       )
       const isTimeInPast = referenceDate.set('hour', time).isBefore(new Date())
         
@@ -80,6 +84,7 @@ const addSchedule = async (req: Request, res: Response) => { //Só pode marcar e
         return res.json('Você já agendou esse veículo para esse horário agendado')
       }
     })
+
     if (scheduled.length >= workDays[0].quantidade_por_vez) {
       return res.json("Esse horário não está mais disponível")
     }
@@ -100,15 +105,40 @@ const addSchedule = async (req: Request, res: Response) => { //Só pode marcar e
 const getClientSchedule = async (req: Request, res: Response) => { //Possível fazer com filtros? ex: Data específica, após tal data, dentro de hoje...
   const { cellNumber } = req.params;
 
-  const [{ cpf }] = await db().select().from('usuarios').where('telefone', cellNumber)
+  const [{ cpf, nome }] = await db().select().from('usuarios').where('telefone', cellNumber)
 
-  const schedule = await db("agendamentos").select().where('cliente', cpf)
+  const schedulesArray = await db("agendamentos").select().where('cliente', cpf)
 
-  return res.send(schedule)
+  const vehicles = schedulesArray.map(async schedule => {
+    const vehicleIDs = await db("veiculos").select().where('id', schedule.veiculo)
+    const [{ tipo: serviceName }] = await db("servicos").select("tipo").where('id', schedule.servico)
+    const [ car ] = vehicleIDs.map(vehicle => {
+      return {...schedule, modelo: vehicle.modelo, placa: vehicle.placa, servico: serviceName }
+    })
+
+    return car
+  }) 
+
+  const schedule = await Promise.all(vehicles)
+
+  return res.send({nome, schedule})
+}
+
+const getDaySchedule = async (req: Request, res: Response) => {
+  const { date } = req.query;
+
+  const schedulesArray = await db("agendamentos as a")
+    .select('a.id AS agendamento_id', 'a.data AS agendamento_data', 'a.cliente AS agendamento_cliente', 'a.veiculo AS agendamento_veiculo', 'a.servico AS agendamento_servico', 'a.status AS agendamento_notificacao', 'o.*')
+    .whereBetween('data', [dayjs(String(date)).set('hour', 0).toDate(), dayjs(String(date)).set('hour', 23).toDate()])
+    .leftJoin('ordem_servico as o', 'a.id', 'o.agendamento');
+
+
+  return res.send(schedulesArray)
 }
 
 export const scheduleController = {
   getAvailableSchedule,
   addSchedule,
-  getClientSchedule
+  getClientSchedule,
+  getDaySchedule
 }

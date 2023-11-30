@@ -13,6 +13,10 @@ declare module '../../knexfile.js' {
     };
   };
 
+  const test: {
+    //Criar conexão de db teste
+  }
+
   const production: {
     client: string;
     connection: {

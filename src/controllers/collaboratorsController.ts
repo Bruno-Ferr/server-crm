@@ -42,7 +42,38 @@ const getCollaborator = async (req: Request, res: Response) => {
 
 }
 
+const getCollaboratorList = async (req: Request, res: Response) => {
+  const collaboratorIds = await db().select().from('colaboradores')
+  const collaboratorPromises  = collaboratorIds.map(async (collaborator) => {
+    const servicesId = await db().select('servico').from('colaborador_servicos').where('colaborador', collaborator.id)
+    const schedule = await db().select().from('colaborador_horarios').where('colaborador', collaborator.id)
+
+    const servicesPromises = servicesId.map(async (serviceId) => {
+      const [services] = await db().select('tipo').from('servicos').where('id', serviceId.servico)
+
+      return services
+    })
+
+    const services = await Promise.all(servicesPromises);
+
+    return {
+      ...collaborator,
+      servicos: services,
+      horarios: schedule
+    }
+  })
+
+  const collaborators = await Promise.all(collaboratorPromises);
+
+  if (collaborators.length < 1) {
+    return res.send("Não existem serviços cadastrados!")
+  }
+
+  return res.send(collaborators)
+}
+
 export const collaboratorController = {
   addCollaborator,
-  getCollaborator
+  getCollaborator,
+  getCollaboratorList
 }
