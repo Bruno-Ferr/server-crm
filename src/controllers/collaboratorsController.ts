@@ -9,10 +9,10 @@ type workDayType = {
 }
 
 const addCollaborator = async (req: Request, res: Response) => {
-  const { name, birthday, first_day, cpf, role, services, work_schedule } = req.body
-
+  const { name, birthday, firstDay, cpf, role, services} = req.body.data
+  
   try {
-    await db.insert({nome: name, data_inicio: first_day, aniversario: birthday, id: cpf, cargo: role}).into("colaboradores")
+    await db("colaboradores").insert({nome: name, data_inicio: firstDay, aniversario: birthday, id: cpf, cargo: role})
 
     const collaboratorServices = services.map((service: string) => ({  
       id: uuid(),
@@ -20,18 +20,9 @@ const addCollaborator = async (req: Request, res: Response) => {
       servico: service 
     }))
 
-    await db.insert(collaboratorServices).into("colaborador_servicos")
-
-    const collaboratorSchedule = work_schedule.map((work_day: workDayType) => ({  
-      id: uuid(),
-      colaborador: cpf,
-      dia: work_day.day,
-      entrada_em_minutos: work_day.entryTime,
-      saida_em_minutos: work_day.exitTime,
-    }))
-
-    await db.insert(collaboratorSchedule).into("colaborador_horarios")
+    await db("colaborador_servicos").insert(collaboratorServices)
   } catch (err) {
+    console.log(err)
     return res.send(err.message)
   }
 
@@ -46,7 +37,6 @@ const getCollaboratorList = async (req: Request, res: Response) => {
   const collaboratorIds = await db().select().from('colaboradores')
   const collaboratorPromises  = collaboratorIds.map(async (collaborator) => {
     const servicesId = await db().select('servico').from('colaborador_servicos').where('colaborador', collaborator.id)
-    const schedule = await db().select().from('colaborador_horarios').where('colaborador', collaborator.id)
 
     const servicesPromises = servicesId.map(async (serviceId) => {
       const [services] = await db().select('tipo').from('servicos').where('id', serviceId.servico)
@@ -58,8 +48,7 @@ const getCollaboratorList = async (req: Request, res: Response) => {
 
     return {
       ...collaborator,
-      servicos: services,
-      horarios: schedule
+      servicos: services
     }
   })
 

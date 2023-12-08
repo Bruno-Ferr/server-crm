@@ -132,7 +132,7 @@ const getDaySchedule = async (req: Request, res: Response) => {
     .whereBetween('data', [dayjs(String(date)).set('hour', 0).toDate(), dayjs(String(date)).set('hour', 23).toDate()])
     .leftJoin('ordem_servico as o', 'a.id', 'o.agendamento');
 
-
+  //.leftJoin('agendamento')
   return res.send(schedulesArray)
 }
 

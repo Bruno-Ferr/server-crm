@@ -11,7 +11,7 @@ type serviceType = {
 const createOS = async (req: Request, res: Response) => { 
   const {services, client, vehicle, arrived} = req.body;
   const { scheduleId } = req.params //Precisa pegar os agendamentos de user... ou user e veiculo
-
+  
   const id = uuid()
 
   const startOfDay = dayjs(arrived).startOf('day').toJSON()
