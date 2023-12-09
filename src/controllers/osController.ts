@@ -39,7 +39,8 @@ const createOS = async (req: Request, res: Response) => {
     return res.status(400).json({ error: 'OS for this schedule already exists.'});
   }
 
-  await db('ordem_servico').insert({id, cliente: client, veiculo: vehicle, chegada: new Date(arrived), agendamento: scheduleId})
+  //Incorrect datetime "chegada", utilizar dayjs para datas
+  //await db('ordem_servico').insert({id, cliente: client, veiculo: vehicle, chegada: arrived, agendamento: scheduleId})
 
   const services_os = services.map((service: serviceType) => ({  
     id: uuid(),
@@ -48,7 +49,7 @@ const createOS = async (req: Request, res: Response) => {
     instrucoes_especiais: service.instrucoes_especiais
   }))
 
-  await db('servicos_os').insert(services_os)
+  //await db('servicos_os').insert(services_os)
 
   return res.send('OS criada')
 }

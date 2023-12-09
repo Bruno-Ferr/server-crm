@@ -35,6 +35,17 @@ const listServices = async (req: Request, res: Response) => {
 
   return res.send(services)
 }
+const getWorkdays = async (req: Request, res: Response) => {
+  const workDays = await db().select().from('funcionamento')
+
+  if (workDays.length < 1) {
+    return res.send("Não existem serviços cadastrados!")
+  }
+
+  //Fazer filtragem, transformando em apenas um dia com array de serviços e horário de entrada e saída em horas
+
+  return res.send(workDays)
+}
 
 const addServices = async (req: Request, res: Response) => {
   const { type, price, duration } = req.body;
@@ -104,5 +115,6 @@ const addWorkdays = async (req: Request, res: Response) => {
 export const serviceController = {
   addServices,
   addWorkdays,
-  listServices
+  listServices,
+  getWorkdays
 }
