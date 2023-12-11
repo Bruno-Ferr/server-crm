@@ -35,16 +35,42 @@ const listServices = async (req: Request, res: Response) => {
 
   return res.send(services)
 }
+
 const getWorkdays = async (req: Request, res: Response) => {
-  const workDays = await db().select().from('funcionamento')
+  const workDays = await db('funcionamento as f').select('f.*', 's.tipo')
+    .leftJoin('servicos as s', 'f.servicos', 's.id'); //JOIN com os serviços
 
   if (workDays.length < 1) {
     return res.send("Não existem serviços cadastrados!")
   }
+//dayjs().day(item.dia).format('dddd')
+  const convertArray = (inputArray) => {
+    const result: any = [];
+    
+    inputArray.forEach(item => {
+      const existingDay: any = result.find((i: any) => i.dia === item.dia);
+  
+      if (existingDay) {
+        existingDay.servicos.push({ id: item.servicos, nome: item.tipo });
+      } else {
+        result.push({
+          id: item.id,
+          dia: item.dia,
+          abertura: item.abertura_em_minutos / 60,
+          fechamento: item.fechamento_em_minutos / 60,
+          servicos: [{ id: item.servicos, nome: item.tipo}]
+        });
+      }
+    });
+  
+    return result;
+  };
+  
+  const outputArray = convertArray(workDays);
 
   //Fazer filtragem, transformando em apenas um dia com array de serviços e horário de entrada e saída em horas
 
-  return res.send(workDays)
+  return res.send(outputArray.sort((a, b) => a.dia - b.dia))
 }
 
 const addServices = async (req: Request, res: Response) => {
