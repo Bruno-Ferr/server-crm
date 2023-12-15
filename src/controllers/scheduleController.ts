@@ -128,11 +128,13 @@ const getDaySchedule = async (req: Request, res: Response) => {
   const { date } = req.query;
 
   const schedulesArray = await db("agendamentos as a")
-    .select('a.id AS agendamento_id', 'a.data AS agendamento_data', 'a.cliente AS agendamento_cliente', 'a.veiculo AS agendamento_veiculo', 'a.servico AS agendamento_servico', 'a.status AS agendamento_notificacao', 'o.*')
+    .select('a.id AS agendamento_id', 'a.data AS agendamento_data', 'a.cliente AS agendamento_cliente', 'a.veiculo AS agendamento_veiculo', 'a.servico AS agendamento_servico', 'a.status AS agendamento_notificacao', 'o.*', 'c.*')
     .whereBetween('data', [dayjs(String(date)).set('hour', 0).toDate(), dayjs(String(date)).set('hour', 23).toDate()])
-    .leftJoin('ordem_servico as o', 'a.id', 'o.agendamento');
+    .leftJoin('ordem_servico as o', 'a.id', 'o.agendamento')
+    .leftJoin('checklist as c', 'o.id', 'c.os_id');
 
   //.leftJoin('agendamento')
+  console.log(schedulesArray)
   return res.send(schedulesArray)
 }
 

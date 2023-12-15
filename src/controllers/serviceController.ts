@@ -101,7 +101,6 @@ const addServices = async (req: Request, res: Response) => {
 const addWorkdays = async (req: Request, res: Response) => {
   try {
     const { workSchedule } = req.body;
-
     // Check for duplicate entries in the workSchedule array
     const hasDuplicates = hasDuplicateWorkDays(workSchedule);
 
@@ -110,25 +109,26 @@ const addWorkdays = async (req: Request, res: Response) => {
     }
 
     // Check for duplicates in the database
-    const existingWorkDays = await db('funcionamento')
-      .select('dia', 'servicos')
-      .whereIn('dia', workSchedule.map((workDay: WorkDayType) => workDay.day))
-      .whereIn('servicos', workSchedule.map((workDay: WorkDayType) => workDay.servico));
+    // const existingWorkDays = await db('funcionamento')
+    //   .select('dia', 'servicos')
+    //   .whereIn('dia', workSchedule.map((workDay: WorkDayType) => workDay.day))
+    //   .whereIn('servicos', workSchedule.map((workDay: WorkDayType) => workDay.servico));
 
-    if (existingWorkDays.length > 0) {
-      return res.status(400).json({ error: 'Duplicate work days found in the database.' });
-    }
-
+    // if (existingWorkDays.length > 0) {
+    //   return res.status(400).json({ error: 'Duplicate work days found in the database.' });
+    // }
+    
     const workday = workSchedule.map((workDay: WorkDayType) => ({  
         id: uuid(),
         dia: workDay.day,
         abertura_em_minutos: workDay.openAt,
         fechamento_em_minutos: workDay.closeAt,
         servicos: workDay.servico,
-        quantidade_por_vez: workDay.quantity
+        quantidade_por_vez: 1 //workDay.quantity, inútil!!! Deveria estar em serviços, se for útil
       }))
 
     //Talvez precise converter o workDay.openAt e workDay.closeAt para minutos
+    await db('funcionamento').del()
     await db('funcionamento').insert(workday)
     
     return res.send('Dias e horários de funcionamento do estabelecimento cadastrado!')

@@ -4,7 +4,7 @@
  */
 export function up(knex) {
   return knex.schema.createTable('checklist', (table) => {
-    table.uuid('id').defaultTo(knex.fn.uuid()).notNullable().unique().primary();
+    table.uuid('checklist_id').defaultTo(knex.fn.uuid()).notNullable().unique().primary();
     table.text('descricao').notNullable();
     table.string('foto').notNullable();
     table.uuid('os_id').references('id').inTable('ordem_servico').notNullable();

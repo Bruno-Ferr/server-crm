@@ -6,7 +6,7 @@ const app = express()
 
 const port = 3333 //Trocar para o .env
 
-var corsWhitelist = ['http://localhost:5173']
+var corsWhitelist = ['http://localhost:5173', '*']
 var corsOptions = {
     origin: function (origin, callback) {
         if (corsWhitelist.indexOf(origin) !== -1) {
