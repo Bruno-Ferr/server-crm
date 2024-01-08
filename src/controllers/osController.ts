@@ -55,7 +55,7 @@ const createOS = async (req: Request, res: Response) => {
 }
 
 const updateOS = async (req: Request, res: Response) => {
-  const edit = req.query;
+  const edit = req.body;
   const id = req.params.id;
 
   const keys = Object.keys(edit)
@@ -65,9 +65,11 @@ const updateOS = async (req: Request, res: Response) => {
   keys.forEach((key, index) => {
     updateObject[key] = values[index];
   });
+
   
   try {
-    await db('ordem_servico').where({ id }).update(updateObject)
+     await db('ordem_servico').where({ id }).update(updateObject)
+    
   } catch (err) {
     return res.send(err.message)
   }

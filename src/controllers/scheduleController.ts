@@ -134,7 +134,7 @@ const getDaySchedule = async (req: Request, res: Response) => {
     .leftJoin('checklist as c', 'o.id', 'c.os_id');
 
   //.leftJoin('agendamento')
-  console.log(schedulesArray)
+  //console.log(schedulesArray)
   return res.send(schedulesArray)
 }
 

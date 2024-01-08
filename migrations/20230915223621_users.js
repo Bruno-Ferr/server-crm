@@ -8,7 +8,10 @@ export function up(knex) {
     table.string('nome').notNullable();
     table.timestamp('nascimento');
     table.string('telefone');
-    table.string('endereco');
+    table.string('logradouro');
+    table.integer('numero');
+    table.string('cidade');
+    table.string('estado', 2);
   });
 }
 
