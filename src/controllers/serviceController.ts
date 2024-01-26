@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { v4 as uuid } from "uuid";
 import { db } from "../database";
+import { createNewService, createNewWorkday, deleteWorkday, getAllServices, getServicesByType, getWorkdaysServices } from "../database/service_table";
 
 type WorkDayType = {
   day: number;
@@ -27,7 +28,7 @@ function hasDuplicateWorkDays(workSchedule: WorkDayType[]): boolean {
 }
 
 const listServices = async (req: Request, res: Response) => {
-  const services = await db().select().from('servicos')
+  const services = await getAllServices()
 
   if (services.length < 1) {
     return res.send("Não existem serviços cadastrados!")
@@ -37,8 +38,7 @@ const listServices = async (req: Request, res: Response) => {
 }
 
 const getWorkdays = async (req: Request, res: Response) => {
-  const workDays = await db('funcionamento as f').select('f.*', 's.tipo')
-    .leftJoin('servicos as s', 'f.servicos', 's.id'); //JOIN com os serviços
+  const workDays = await getWorkdaysServices() 
 
   if (workDays.length < 1) {
     return res.send("Não existem serviços cadastrados!")
@@ -80,12 +80,10 @@ const addServices = async (req: Request, res: Response) => {
   const id = uuid()
 
   //Talvez usar regex apenas com consoantes para evitar erros de digitação
-  const existingService = await db("servicos")
-      .where("tipo", type)
-      .first();
+  const existingService = await getServicesByType(type)
 
   if (!existingService) {
-    await db('servicos').insert({
+    await createNewService({
       id,
       tipo: type,
       preco: price,
@@ -128,8 +126,8 @@ const addWorkdays = async (req: Request, res: Response) => {
       }))
 
     //Talvez precise converter o workDay.openAt e workDay.closeAt para minutos
-    await db('funcionamento').del()
-    await db('funcionamento').insert(workday)
+    await deleteWorkday();
+    await createNewWorkday(workday)
     
     return res.send('Dias e horários de funcionamento do estabelecimento cadastrado!')
   } catch (error) {

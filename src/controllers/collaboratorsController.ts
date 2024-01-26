@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { db } from "../database";
 import { v4 as uuid } from 'uuid';
+import { createCollaborators, createCollaborators_services, getCollaborators, getCollaboratorsWithServices } from "../database/collaborators_table";
+import { getServicesByCollab } from "../database/service_table";
 
 type workDayType = {
   day: number,
@@ -10,9 +12,9 @@ type workDayType = {
 
 const addCollaborator = async (req: Request, res: Response) => {
   const { name, birthday, firstDay, cpf, role, services} = req.body.data
-  
+  const collab = {nome: name, data_inicio: firstDay, aniversario: birthday, id: cpf, cargo: role}
   try {
-    await db("colaboradores").insert({nome: name, data_inicio: firstDay, aniversario: birthday, id: cpf, cargo: role})
+    await createCollaborators(collab);
 
     const collaboratorServices = services.map((service: string) => ({  
       id: uuid(),
@@ -20,7 +22,7 @@ const addCollaborator = async (req: Request, res: Response) => {
       servico: service 
     }))
 
-    await db("colaborador_servicos").insert(collaboratorServices)
+    await createCollaborators_services(collaboratorServices)
   } catch (err) {
     console.log(err)
     return res.send(err.message)
@@ -34,23 +36,25 @@ const getCollaborator = async (req: Request, res: Response) => {
 }
 
 const getCollaboratorList = async (req: Request, res: Response) => {
-  const collaboratorIds = await db().select().from('colaboradores')
-  const collaboratorPromises  = collaboratorIds.map(async (collaborator) => {
-    const servicesId = await db().select('servico').from('colaborador_servicos').where('colaborador', collaborator.id)
+  //const collaboratorIds = await getCollaborators()
+  // const collaboratorPromises  = collaboratorIds.map(async (collaborator) => {
+    // const servicesId = await getServicesByCollab(collaborator.id) //Trocar para chamadas com join?
 
-    const servicesPromises = servicesId.map(async (serviceId) => {
-      const [services] = await db().select('tipo').from('servicos').where('id', serviceId.servico)
+    // const servicesPromises = servicesId.map(async (serviceId) => {
+    //   const [services] = await db().select('tipo').from('servicos').where('id', serviceId.servico)
 
-      return services
-    })
+    //   return services
+    // })
 
-    const services = await Promise.all(servicesPromises);
+  //   const services = await Promise.all(servicesPromises);
 
-    return {
-      ...collaborator,
-      servicos: services
-    }
-  })
+  //   return {
+  //     ...collaborator,
+  //     servicos: services
+  //   }
+  // })
+
+  const collaboratorPromises = await getCollaboratorsWithServices()
 
   const collaborators = await Promise.all(collaboratorPromises);
 

@@ -41,7 +41,7 @@ const createClient = async (req: Request, res: Response) => {
         }
         await updateClientNumberByCPF(cellNumber, cpf);
         //verificar se o número já está sendo utilizado
-        const [ alreadyClient ] = await getClientByCellNumber(cellNumber); //db().select().from('usuarios').where('telefone', cellNumber)
+        const [ alreadyClient ] = await getClientByCellNumber(cellNumber);
         return res.send(alreadyClient)
       } else {
         return res.send('O usuário já está cadastrado');

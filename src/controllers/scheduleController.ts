@@ -3,6 +3,10 @@ import { db } from "../database";
 import { v4 as uuid } from 'uuid';
 import dayjs from "dayjs";
 import 'dayjs/locale/pt-br' 
+import { getServicesById, getServicesTypeById, getWorkdayByDate } from "../database/service_table";
+import { getClientScheduleByCPF, getFreeSchedule, getScheduleArray } from "../database/schedule_table";
+import { getClientByCellNumber } from "../database/cliente_table";
+import { getVehicleByVeiculo } from "../database/vehicle_table";
 
 const getAvailableSchedule = async (req: Request, res: Response) => { //Corrigir formatação de datas/horários
   const { service, selectedDate } = req.query // selectedDate deve vir em outro formato, ver como converte-lo
@@ -12,7 +16,7 @@ const getAvailableSchedule = async (req: Request, res: Response) => { //Corrigir
     const referenceDate = dayjs(String(selectedDate))
 
     //Pega o horário de funcionamento do lava rápido
-    const workDays = await db('funcionamento').select().where('dia', selectedDateDay)
+    const workDays = await getWorkdayByDate(selectedDateDay)
     
     if(workDays.length < 1) {return res.send(`Não trabalhamos na(o) ${dayjs().locale('pt-br').day(selectedDateDay).format('dddd')}`)}
     //Separar horários de abertura e fechamento
@@ -20,7 +24,7 @@ const getAvailableSchedule = async (req: Request, res: Response) => { //Corrigir
     const closeAt = workDays[0].fechamento_em_minutos;
 
     const hora = 60
-    const [services] = await db('servicos').select().where('id', service)
+    const [services] = await getServicesById(service) //Tipo de service??
 
     const startHour = openAt / 60 // Precisa trocar a conta para o tempo de duração medio do serviço, no caso se o tempo for 1 hora está correto
     const endHour = closeAt / 60 // Precisa trocar a conta para o tempo de duração medio do serviço, no caso se o tempo for 1 hora está correto
@@ -35,11 +39,8 @@ const getAvailableSchedule = async (req: Request, res: Response) => { //Corrigir
     ) // Cria um array com todas as horas disponíveis
 
     //Procura todos os agendamentos do SERVIÇO selecionado entre as horas "disponíveis"
-    const scheduled = await db('agendamentos').select()
-      .where('servico', service)
-      .and
-      .whereBetween('data', [referenceDate.set('hour', startHour).toDate(), referenceDate.set('hour', endHour).toDate()])
-    
+    const scheduled = await getFreeSchedule(service, referenceDate, startHour, endHour)
+
     // scheduled.length > workDays[0].quantidade_por_vez preciso consultar se um tempo específico se repete igual a workDays[0].quantidade_por_vez vezes...
     const availableTimes = possibleTimes.filter((time) => {
       const isTimeBlocked = scheduled.some(
@@ -105,13 +106,13 @@ const addSchedule = async (req: Request, res: Response) => { //Só pode marcar e
 const getClientSchedule = async (req: Request, res: Response) => { //Possível fazer com filtros? ex: Data específica, após tal data, dentro de hoje...
   const { cellNumber } = req.params;
 
-  const [{ cpf, nome }] = await db().select().from('usuarios').where('telefone', cellNumber)
+  const [{ cpf, nome }] = await getClientByCellNumber(cellNumber)
 
-  const schedulesArray = await db("agendamentos").select().where('cliente', cpf)
+  const schedulesArray = await getClientScheduleByCPF(cpf) 
 
   const vehicles = schedulesArray.map(async schedule => {
-    const vehicleIDs = await db("veiculos").select().where('id', schedule.veiculo)
-    const [{ tipo: serviceName }] = await db("servicos").select("tipo").where('id', schedule.servico)
+    const vehicleIDs = await getVehicleByVeiculo(schedule.veiculo)
+    const [{ tipo: serviceName }] = await getServicesTypeById(schedule.servico)
     const [ car ] = vehicleIDs.map(vehicle => {
       return {...schedule, modelo: vehicle.modelo, placa: vehicle.placa, servico: serviceName }
     })
@@ -127,11 +128,7 @@ const getClientSchedule = async (req: Request, res: Response) => { //Possível f
 const getDaySchedule = async (req: Request, res: Response) => {
   const { date } = req.query;
 
-  const schedulesArray = await db("agendamentos as a")
-    .select('a.id AS agendamento_id', 'a.data AS agendamento_data', 'a.cliente AS agendamento_cliente', 'a.veiculo AS agendamento_veiculo', 'a.servico AS agendamento_servico', 'a.status AS agendamento_notificacao', 'o.*', 'c.*')
-    .whereBetween('data', [dayjs(String(date)).set('hour', 0).toDate(), dayjs(String(date)).set('hour', 23).toDate()])
-    .leftJoin('ordem_servico as o', 'a.id', 'o.agendamento')
-    .leftJoin('checklist as c', 'o.id', 'c.os_id');
+  const schedulesArray = await getScheduleArray(date)
 
   //.leftJoin('agendamento')
   //console.log(schedulesArray)

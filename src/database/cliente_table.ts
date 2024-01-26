@@ -24,7 +24,6 @@ export const getSameCellNumberDifferentCPFs = async (cellNumber: string, cpf: st
   return client;
 }
 
-
 // ############ CREATES
 
 export const createClient = async (user: {}) => {
@@ -32,11 +31,6 @@ export const createClient = async (user: {}) => {
 
   return client;
 }
-
-
-
-
-
 
 // ###################### UPDATES 
 
