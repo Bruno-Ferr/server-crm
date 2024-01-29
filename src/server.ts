@@ -17,7 +17,7 @@ var corsOptions = {
     }
 }
 
-// app.use(cors(corsOptions));
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -27,6 +27,7 @@ import os from './routes/os';
 import scheduling from './routes/scheduling';
 import services from './routes/services';
 import vehicle from './routes/vehicle';
+import authenticate from './routes/auth';
 
 app.use(client);
 app.use(os);
@@ -34,6 +35,7 @@ app.use(scheduling);
 app.use(services);
 app.use(vehicle);
 app.use(collaborator);
+app.use(authenticate);
 
 
 app.listen(port, () => {

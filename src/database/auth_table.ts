@@ -1,8 +1,8 @@
 import { db } from ".";
 
 
-export const getAdminByEmail = async (email: string) => {
-  const admin = await db('administradores').select().where('email', email);
+export const getAdminByUsername = async (username: string) => {
+  const admin = await db('administradores').select().where('email', username);
 
   return admin;
 }

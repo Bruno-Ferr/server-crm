@@ -30,9 +30,9 @@ function hasDuplicateWorkDays(workSchedule: WorkDayType[]): boolean {
 const listServices = async (req: Request, res: Response) => {
   const services = await getAllServices()
 
-  if (services.length < 1) {
-    return res.send("Não existem serviços cadastrados!")
-  }
+  // if (services.length < 1) {
+  //   return res.status(404).send("Não existem serviços cadastrados!")
+  // }
 
   return res.send(services)
 }
@@ -40,9 +40,9 @@ const listServices = async (req: Request, res: Response) => {
 const getWorkdays = async (req: Request, res: Response) => {
   const workDays = await getWorkdaysServices() 
 
-  if (workDays.length < 1) {
-    return res.send("Não existem serviços cadastrados!")
-  }
+  // if (workDays.length < 1) {
+  //   return res.status(404).send("Não existem serviços cadastrados!")
+  // }
 //dayjs().day(item.dia).format('dddd')
   const convertArray = (inputArray) => {
     const result: any = [];

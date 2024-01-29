@@ -5,7 +5,7 @@
 export async function up(knex) {
   return knex.schema.createTable('administradores', function (table) {
     table.string('email').notNullable().unique().primary();
-    table.string('nome').notNullable();
+    table.string('name').notNullable();
     table.string('password').notNullable();
     table.string('role').notNullable();
   })
