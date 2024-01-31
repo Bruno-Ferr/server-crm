@@ -42,7 +42,7 @@ export async function verifyToken(token: string) {
   const secret = new TextEncoder().encode("segredo-do-jwt");
 
   const { payload } = jwt.jwtVerify(token, secret) as any;
-  const user = await getAdminByEmail(payload.email);
+  const user = await getAdminByUsername(payload.email);
   return user;
 }
 
