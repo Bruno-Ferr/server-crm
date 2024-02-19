@@ -2,7 +2,7 @@ import { db } from ".";
 
 
 export const getAdminByUsername = async (username: string) => {
-  const admin = await db('administradores').select().where('email', username);
+  const [admin] = await db('administradores').select().where('email', username);
 
   return admin;
 }

@@ -23,31 +23,53 @@ export const register = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   const auth = req.body;
 
-  const [userExists] = await getAdminByUsername(auth.email);
+  const userExists = await getAdminByUsername(auth.email);
   if (userExists === null) throw new Error("User not found.");
-
 
   const isSamePassword = bcrypt.compareSync(auth.password, userExists.password);
   if (!isSamePassword) throw new Error("Wrong password.");
 
   const secret = new TextEncoder().encode("segredo-do-jwt")
 
-  const token = new jwt.SignJWT({ id: userExists.id, email: userExists.email }).setExpirationTime("1d");
+  const payload = {
+    sub: userExists.id,
+    name: userExists.email,
+    role: userExists.role,
+  }
+
+  const alg = 'HS256'
+
+  const token = await new jwt.SignJWT(payload).setProtectedHeader({ alg }).setExpirationTime("1d").sign(secret)
 
   userExists.password = "";
   return res.status(200).send({ token, userExists });
 }
 
+export async function recoverToken(req: Request, res: Response) {
+  const auth = req.headers.authorization
+
+  if(auth) {
+    const [, jwtToken] = auth.split(' ');
+    const user = await verifyToken(jwtToken)
+
+    return res.status(200).send({user})
+  }
+
+  return res.status(400).send({error: 'ops'})
+}
+
 export async function verifyToken(token: string) {
   const secret = new TextEncoder().encode("segredo-do-jwt");
 
-  const { payload } = jwt.jwtVerify(token, secret) as any;
-  const user = await getAdminByUsername(payload.email);
-  return user;
+  const { payload } = await jwt.jwtVerify(token, secret) as any;
+
+  const {name, email, role} = await getAdminByUsername(payload.name);
+  return {name, email, role};
 }
 
 export const authController = {
   register,
   login,
-  verifyToken
+  verifyToken,
+  recoverToken
 }
