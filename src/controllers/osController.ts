@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { db } from "../database";
 import { v4 as uuid } from "uuid";
 import dayjs from "dayjs";
+import { getOSDB } from "../database/os_table";
 
 type serviceType = {
   service: string,
@@ -40,7 +41,7 @@ const createOS = async (req: Request, res: Response) => {
   }
 
   //Incorrect datetime "chegada", utilizar dayjs para datas
-  //await db('ordem_servico').insert({id, cliente: client, veiculo: vehicle, chegada: arrived, agendamento: scheduleId})
+  await db('ordem_servico').insert({id, cliente: client, veiculo: vehicle, chegada: new Date(arrived), agendamento: scheduleId})
 
   const services_os = services.map((service: serviceType) => ({  
     id: uuid(),
@@ -55,21 +56,13 @@ const createOS = async (req: Request, res: Response) => {
 }
 
 const updateOS = async (req: Request, res: Response) => {
-  const edit = req.body;
+  const {inicio, conclusao, pagamento, retirada, prazo_entrega, status} = req.body;
   const id = req.params.id;
 
-  const keys = Object.keys(edit)
-  const values = Object.values(edit)
-
-  const updateObject = {};
-  keys.forEach((key, index) => {
-    updateObject[key] = values[index];
-  });
-
-  
   try {
-     await db('ordem_servico').where({ id }).update(updateObject)
-    
+    await db('ordem_servico').where({ agendamento: id }).update({inicio: new Date(inicio), conclusao: new Date(conclusao), 
+      pagamento: pagamento, retirada: new Date(retirada), prazo_entrega: new Date(prazo_entrega), status: status})
+
   } catch (err) {
     return res.send(err.message)
   }

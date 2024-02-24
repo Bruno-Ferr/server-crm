@@ -18,8 +18,11 @@ export const getClientScheduleByCPF = async (cpf) => {
 
 export const getScheduleArray = async (date) => {
   const scheduleArray = await db("agendamentos as a")
-    .select('a.id AS agendamento_id', 'a.data AS agendamento_data', 'a.cliente AS agendamento_cliente', 'a.veiculo AS agendamento_veiculo', 'a.servico AS agendamento_servico', 'a.status AS agendamento_notificacao', 'o.*', 'c.*')
+    .select('a.id AS agendamento_id', 'a.data AS agendamento_data', 'clt.nome AS agendamento_cliente', 'vclo.placa AS agendamento_veiculo_placa', 'vclo.modelo AS agendamento_veiculo', 'srvc.tipo AS agendamento_servico', 'a.status AS agendamento_notificacao', 'o.*', 'c.*')
     .whereBetween('data', [dayjs(String(date)).set('hour', 0).toDate(), dayjs(String(date)).set('hour', 23).toDate()])
+    .join('usuarios as clt', 'a.cliente', 'clt.cpf')
+    .join('veiculos as vclo', 'a.veiculo', 'vclo.id')
+    .join('servicos as srvc', 'a.servico', 'srvc.id')
     .leftJoin('ordem_servico as o', 'a.id', 'o.agendamento')
     .leftJoin('checklist as c', 'o.id', 'c.os_id');
 
