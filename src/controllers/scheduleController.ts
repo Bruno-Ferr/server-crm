@@ -71,6 +71,9 @@ const addSchedule = async (req: Request, res: Response) => { //Só pode marcar e
     const date = dayjs(selectedDate).set("hour", selectedTime.substring(0, 2)).set("minute", selectedTime.substring(3)).toDate()
 
     const selectedDateDay = dayjs(String(selectedDate)).day()
+    console.log(selectedDateDay)
+    console.log(serviceId)
+
     const workDays = await db('funcionamento').select().where('dia', selectedDateDay).and.where('servicos', serviceId)
 
     //Confere se ainda há vaga no horário do agendamento
@@ -86,6 +89,7 @@ const addSchedule = async (req: Request, res: Response) => { //Só pode marcar e
       }
     })
 
+    console.log(workDays)
     if (scheduled.length >= workDays[0].quantidade_por_vez) {
       return res.json("Esse horário não está mais disponível")
     }

@@ -6,18 +6,18 @@ const app = express()
 
 const port = 3333 //Trocar para o .env
 
-var corsWhitelist = ['http://localhost:5173', 'http://localhost:1420', '*']
-var corsOptions = {
-    origin: function (origin, callback) {
-        if (corsWhitelist.indexOf(origin) !== -1) {
-            callback(null, true)
-        } else {
-            callback(new Error('Acesso não permitido'))
-        }
-    }
-}
+// var corsWhitelist = ['http://localhost:5173', 'http://localhost:1420', '*']
+// var corsOptions = {
+//     origin: function (origin, callback) {
+//         if (corsWhitelist.indexOf(origin) !== -1) {
+//             callback(null, true)
+//         } else {
+//             callback(new Error('Acesso não permitido'))
+//         }
+//     }
+// }
 
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

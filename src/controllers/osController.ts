@@ -32,6 +32,8 @@ const createOS = async (req: Request, res: Response) => {
   //     .whereIn('os_id', existingServiceOrder.map((serviceOrder) => serviceOrder.ordem_servico))
   //   return res.status(400).json({ error: 'Duplicate OS found in the database.', OS: [existingVehicleOS, existingServiceOrder, existingServiceOrderChecklist] });
   // }
+
+  console.log({services, client, vehicle, arrived})
   
   const existingOS = await db('ordem_servico')
     .where('agendamento', scheduleId)
@@ -60,9 +62,9 @@ const updateOS = async (req: Request, res: Response) => {
   const id = req.params.id;
 
   try {
-    await db('ordem_servico').where({ agendamento: id }).update({inicio: new Date(inicio), conclusao: new Date(conclusao), 
-      pagamento: pagamento, retirada: new Date(retirada), prazo_entrega: new Date(prazo_entrega), status: status})
-
+    await db('ordem_servico').where({ agendamento: id }).update({inicio: new Date(inicio), conclusao: conclusao && new Date(conclusao), 
+      pagamento: pagamento ? 1 : 0, retirada: retirada && new Date(retirada), prazo_entrega: prazo_entrega && new Date(prazo_entrega), status: status})
+    
   } catch (err) {
     return res.send(err.message)
   }
